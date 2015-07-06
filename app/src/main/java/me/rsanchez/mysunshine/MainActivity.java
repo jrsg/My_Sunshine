@@ -1,5 +1,6 @@
 package me.rsanchez.mysunshine;
 
+import android.net.Uri;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -63,7 +64,7 @@ public class MainActivity extends ActionBarActivity {
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-
+            Uri url = Uri.parse("http://api.openweathermap.org/data/2.5/forecast?q=Veracruz,mx&mode=json&units=metric&cnt=7");
 
             String[] weather = {
                     "Lun - soleado - 32/29",
