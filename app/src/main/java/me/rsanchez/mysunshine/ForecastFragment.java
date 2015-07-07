@@ -1,5 +1,6 @@
 package me.rsanchez.mysunshine;
 
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -86,13 +87,15 @@ public class ForecastFragment extends Fragment {
     }
 
     private void refreshForecast() {
-        new FetchWeatherTask().execute();
+        new FetchWeatherTask().execute("94297");
     }
 
     public static class FetchWeatherTask extends AsyncTask<String, Void, String>{
         private final String TAG = FetchWeatherTask.class.getSimpleName();
         @Override
         protected String doInBackground(String... params) {
+            String cp = params[0];
+
             // These two need to be declared outside the try/catch
             // so that they can be closed in the finally block.
             HttpURLConnection urlConnection = null;
@@ -105,7 +108,20 @@ public class ForecastFragment extends Fragment {
                 // Construct the URL for the OpenWeatherMap query
                 // Possible parameters are available at OWM's forecast API page, at
                 // http://openweathermap.org/API#forecast
-                URL url = new URL("http://api.openweathermap.org/data/2.5/forecast?q=Veracruz,mx&mode=json&units=metric&cnt=7");
+                Uri uri = new Uri.Builder()
+                        .scheme("http")
+                        .authority("api.openweathermap.org")
+                        .appendPath("data")
+                        .appendPath("2.5")
+                        .appendPath("forecast")
+                        .appendQueryParameter("q", cp)
+                        .appendQueryParameter("mode", "json")
+                        .appendQueryParameter("units", "metric")
+                        .appendQueryParameter("cnt", "7").build();
+
+                Log.i(TAG, uri.toString());
+
+                URL url = new URL(uri.toString());
 
                 // Create the request to OpenWeatherMap, and open the connection
                 urlConnection = (HttpURLConnection) url.openConnection();
