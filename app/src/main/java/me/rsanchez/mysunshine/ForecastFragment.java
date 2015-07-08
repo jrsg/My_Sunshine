@@ -12,7 +12,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
+
+import org.json.JSONException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -22,12 +26,15 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by JoséRubén on 06/07/2015.
  */
 
 public class ForecastFragment extends Fragment {
+    private ArrayAdapter<String> mForecastAdapter;
+    private ListView mForecastlistView;
 
     public ForecastFragment() {
 
@@ -49,23 +56,15 @@ public class ForecastFragment extends Fragment {
 
 
         String[] weather = {
-                "Lun - soleado - 32/29",
-                "Mar - nublado - 31/27",
-                "Mie - nublado - 36/32",
-                "Jue - soleado - 36/31",
-                "Vie - nublado - 33/29",
-                "Sab - soleado - 31/28"
+                "Row 1"
         };
 
+        List<String> data = new ArrayList<String>(Arrays.asList(weather));
 
+        mForecastAdapter = new ArrayAdapter<String>(getActivity(), R.layout.list_item_forecast, R.id.list_item_forecast_textview, data);
+        mForecastlistView = (ListView) rootView.findViewById(R.id.listview_forecast);
 
-        ArrayList<String> weekWeather = new ArrayList<String>(Arrays.asList(weather));
-
-        ArrayAdapter<String> listAdapter = new ArrayAdapter<String>(getActivity(), R.layout.list_item_forecast, R.id.list_item_forecast_textview, weekWeather);
-
-        ListView listView = (ListView) rootView.findViewById(R.id.listview_forecast);
-
-        listView.setAdapter(listAdapter);
+        mForecastlistView.setAdapter(mForecastAdapter);
 
         return rootView;
     }
@@ -87,13 +86,34 @@ public class ForecastFragment extends Fragment {
     }
 
     private void refreshForecast() {
-        new FetchWeatherTask().execute("94297");
+        EditText cp_edit = (EditText) getActivity().findViewById(R.id.cp_edit);
+        String cp = cp_edit.getText().toString();
+        if(cp.length() == 5) {
+            new FetchWeatherTask().execute(cp);
+        }else{
+            Toast.makeText(getActivity(),"CP incorrecto", Toast.LENGTH_SHORT).show();
+        }
     }
 
-    public static class FetchWeatherTask extends AsyncTask<String, Void, String>{
+    public class FetchWeatherTask extends AsyncTask<String, Void, String[]>{
         private final String TAG = FetchWeatherTask.class.getSimpleName();
+
         @Override
-        protected String doInBackground(String... params) {
+        protected void onPostExecute(String[] strings) {
+            super.onPostExecute(strings);
+
+            if(strings != null){
+                mForecastAdapter.clear();
+                for(String row : strings){
+                    mForecastAdapter.add(row);
+                }
+            }
+            mForecastAdapter.notifyDataSetChanged();
+
+        }
+
+        @Override
+        protected String[] doInBackground(String... params) {
             String cp = params[0];
 
             // These two need to be declared outside the try/catch
@@ -119,7 +139,7 @@ public class ForecastFragment extends Fragment {
                         .appendQueryParameter("units", "metric")
                         .appendQueryParameter("cnt", "7").build();
 
-                Log.i(TAG, uri.toString());
+                //Log.i(TAG, uri.toString());
 
                 URL url = new URL(uri.toString());
 
@@ -168,7 +188,21 @@ public class ForecastFragment extends Fragment {
                 }
             }
 
-            Log.i(TAG, forecastJsonStr);
+
+
+            //Log.i(TAG, forecastJsonStr);
+
+            if(forecastJsonStr != null){
+                WeatherDataParser myParser = new WeatherDataParser();
+                try {
+                    return myParser.getMaxTempetureForDay(forecastJsonStr, 7);
+                }catch (final JSONException e){
+                    Log.e("myParser", "Error parsing json data", e);
+                }
+
+            }
+
+
             return null;
         }
     }
