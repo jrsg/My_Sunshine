@@ -1,5 +1,6 @@
 package me.rsanchez.mysunshine;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -11,6 +12,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -29,12 +31,14 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Created by JoséRubén on 06/07/2015.
+ * Created by Josï¿½Rubï¿½n on 06/07/2015.
  */
 
 public class ForecastFragment extends Fragment {
     private ArrayAdapter<String> mForecastAdapter;
     private ListView mForecastlistView;
+
+    public final String DETAIL_INDEX = "detail_index";
 
     public ForecastFragment() {
 
@@ -65,6 +69,18 @@ public class ForecastFragment extends Fragment {
         mForecastlistView = (ListView) rootView.findViewById(R.id.listview_forecast);
 
         mForecastlistView.setAdapter(mForecastAdapter);
+
+        mForecastlistView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String data = mForecastAdapter.getItem(position);
+
+
+                Intent intent = new Intent(getActivity(), DetailActivity.class);
+                intent.putExtra(Intent.EXTRA_TEXT, data);
+                startActivity(intent);
+            }
+        });
 
         return rootView;
     }
