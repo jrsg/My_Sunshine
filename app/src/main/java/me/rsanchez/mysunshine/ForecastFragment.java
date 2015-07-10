@@ -1,9 +1,11 @@
 package me.rsanchez.mysunshine;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -14,8 +16,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.EditText;
+
 import android.widget.ListView;
+import android.widget.ShareActionProvider;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -27,16 +30,16 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+
 
 /**
- * Created by Jos�Rub�n on 06/07/2015.
+ * Created by JoseRuben on 06/07/2015.
  */
 
 public class ForecastFragment extends Fragment {
     private ArrayAdapter<String> mForecastAdapter;
     private ListView mForecastlistView;
+    private ShareActionProvider mShareActionProvider;
 
     public final String DETAIL_INDEX = "detail_index";
 
@@ -56,16 +59,7 @@ public class ForecastFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-
-
-
-        String[] weather = {
-                "Row 1"
-        };
-
-        List<String> data = new ArrayList<String>(Arrays.asList(weather));
-
-        mForecastAdapter = new ArrayAdapter<String>(getActivity(), R.layout.list_item_forecast, R.id.list_item_forecast_textview, data);
+        mForecastAdapter = new ArrayAdapter<String>(getActivity(), R.layout.list_item_forecast, R.id.list_item_forecast_textview, new ArrayList<String>());
         mForecastlistView = (ListView) rootView.findViewById(R.id.listview_forecast);
 
         mForecastlistView.setAdapter(mForecastAdapter);
@@ -88,6 +82,13 @@ public class ForecastFragment extends Fragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater menuInflater) {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.forecastfragment, menu);
+
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        refreshForecast();
     }
 
     @Override
@@ -96,16 +97,41 @@ public class ForecastFragment extends Fragment {
             case R.id.action_refresh:
                 refreshForecast();
                 return true;
+            case R.id.action_show_location:
+                showPreferredLocation();
+                return true;
+
         }
 
         return super.onOptionsItemSelected(item);
     }
 
+    private void showPreferredLocation(){
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
+        String locationPref = sharedPref.getString(getString(R.string.pref_location_key), getString(R.string.pref_location_default_value));
+
+        if(locationPref != ""){
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+
+            Uri uri = Uri.parse("geo:0,0?q="+locationPref);
+
+            Log.i("URI_TEST", uri.toString());
+
+            intent.setData(uri);
+            if(intent.resolveActivity(getActivity().getPackageManager()) != null) {
+                startActivity(intent);
+            }
+        }
+    }
+
     private void refreshForecast() {
-        EditText cp_edit = (EditText) getActivity().findViewById(R.id.cp_edit);
-        String cp = cp_edit.getText().toString();
-        if(cp.length() == 5) {
-            new FetchWeatherTask().execute(cp);
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
+        String locationPref = sharedPref.getString(getString(R.string.pref_location_key), getString(R.string.pref_location_default_value));
+
+        String unitPref = sharedPref.getString(getString(R.string.pref_unit_key), "");
+
+        if(locationPref.length() == 5) {
+            new FetchWeatherTask().execute(locationPref, unitPref);
         }else{
             Toast.makeText(getActivity(),"CP incorrecto", Toast.LENGTH_SHORT).show();
         }
@@ -131,6 +157,7 @@ public class ForecastFragment extends Fragment {
         @Override
         protected String[] doInBackground(String... params) {
             String cp = params[0];
+            String unit = params[1];
 
             // These two need to be declared outside the try/catch
             // so that they can be closed in the finally block.
@@ -152,7 +179,7 @@ public class ForecastFragment extends Fragment {
                         .appendPath("forecast")
                         .appendQueryParameter("q", cp)
                         .appendQueryParameter("mode", "json")
-                        .appendQueryParameter("units", "metric")
+                        .appendQueryParameter("units", unit)
                         .appendQueryParameter("cnt", "7").build();
 
                 //Log.i(TAG, uri.toString());

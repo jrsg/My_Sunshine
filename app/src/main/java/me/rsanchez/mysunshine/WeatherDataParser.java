@@ -11,7 +11,7 @@ import java.text.SimpleDateFormat;
 
 
 /**
- * Created by JoséRubén on 07/07/2015.
+ * Created by JoseRuben on 07/07/2015.
  */
 public class WeatherDataParser {
     final private String TAG = this.getClass().getSimpleName();
