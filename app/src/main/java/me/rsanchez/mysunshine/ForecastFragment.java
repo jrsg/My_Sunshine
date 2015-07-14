@@ -131,13 +131,13 @@ public class ForecastFragment extends Fragment {
         String unitPref = sharedPref.getString(getString(R.string.pref_unit_key), "");
 
         if(locationPref.length() == 5) {
-            new FetchWeatherTask().execute(locationPref, unitPref);
+            new FetchWeatherTask(getActivity(), mForecastAdapter).execute(locationPref, unitPref);
         }else{
             Toast.makeText(getActivity(),"CP incorrecto", Toast.LENGTH_SHORT).show();
         }
     }
 
-    public class FetchWeatherTask extends AsyncTask<String, Void, String[]>{
+    /*public class FetchWeatherTask extends AsyncTask<String, Void, String[]>{
         private final String TAG = FetchWeatherTask.class.getSimpleName();
 
         @Override
@@ -248,6 +248,6 @@ public class ForecastFragment extends Fragment {
 
             return null;
         }
-    }
+    }*/
 }
 
